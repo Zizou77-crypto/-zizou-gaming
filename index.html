@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ZIZOU Gaming — Play</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#07070b;color:#fff;font-family:Arial,sans-serif}
+nav{position:sticky;top:0;background:#0b0b11ee;backdrop-filter:blur(12px);padding:16px 6%;display:flex;justify-content:space-between;z-index:5;border-bottom:1px solid #252530}
+.logo{font-size:25px;font-weight:900;letter-spacing:3px}.logo span{color:#7c5cff}
+nav a{color:#ddd;text-decoration:none;margin-left:18px}
+header{text-align:center;padding:65px 20px 35px;background:radial-gradient(circle,#292050,#08080c 65%)}
+header h1{font-size:clamp(48px,10vw,90px);margin:10px}.purple{color:#7c5cff}header p{color:#aaa}
+section{max-width:1100px;margin:auto;padding:35px 20px}.games{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{background:#101017;border:1px solid #282832;border-radius:18px;padding:20px;text-align:center}.card h2{margin:8px}.game{background:#08080c;border-radius:12px;padding:10px;margin-top:15px}
+button{border:0;border-radius:9px;background:#7c5cff;color:#fff;font-weight:bold;padding:11px 18px;cursor:pointer;margin:5px}
+canvas{width:100%;max-width:330px;background:#15151d;border-radius:10px;touch-action:none}
+.score{font-weight:bold;margin:8px}
+@media(max-width:800px){.games{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav><div class="logo">ZI<span>Z</span>OU</div><div><a href="#play">Play</a><a href="#about">About</a></div></nav>
+<header><p class="purple">WELCOME TO THE ZONE</p><h1>ZIZ<span class="purple">OU</span> GAMING</h1><p>Play browser games. Beat your score. Challenge your friends.</p></header>
+
+<section id="play"><h1>🎮 Play Games</h1>
+<div class="games">
+
+<div class="card"><h2>🏎️ Car Dodge</h2><p>Move the car and dodge the blocks.</p>
+<div class="game"><div class="score">Score: <span id="carScore">0</span></div><canvas id="car" width="300" height="380"></canvas><br>
+<button onclick="startCar()">START</button><button onclick="moveCar(-1)">◀</button><button onclick="moveCar(1)">▶</button></div></div>
+
+<div class="card"><h2>🎯 Aim Trainer</h2><p>Tap the target as fast as you can.</p>
+<div class="game"><div class="score">Hits: <span id="hits">0</span> | Time: <span id="time">15</span></div><canvas id="aim" width="300" height="300"></canvas><br><button onclick="startAim()">START</button></div></div>
+
+<div class="card"><h2>🐍 Snake</h2><p>Eat the food and grow.</p>
+<div class="game"><div class="score">Score: <span id="snakeScore">0</span></div><canvas id="snake" width="300" height="300"></canvas><br>
+<button onclick="startSnake()">START</button><button onclick="setDir(0,-1)">▲</button><button onclick="setDir(-1,0)">◀</button><button onclick="setDir(1,0)">▶</button><button onclick="setDir(0,1)">▼</button></div></div>
+
+</div></section>
+<section id="about"><h1>🔥 ZIZOU Arcade</h1><p style="color:#aaa">More games can be added later. These games run directly in your browser—no installation required.</p></section>
+
+<script>
+// CAR DODGE
+const cc=document.getElementById('car'),cx=cc.getContext('2d');let carX=130,blocks=[],carRun=false,carScore=0;
+function drawCar(){cx.clearRect(0,0,300,380);cx.fillStyle="#252535";cx.fillRect(55,0,190,380);cx.fillStyle="#7c5cff";cx.fillRect(carX,330,40,30);cx.fillStyle="#ff4d6d";blocks.forEach(b=>cx.fillRect(b.x,b.y,38,38))}
+function moveCar(d){carX=Math.max(65,Math.min(195,carX+d*45));drawCar()}
+function startCar(){carX=130;blocks=[];carScore=0;carRun=true;document.getElementById('carScore').textContent=0;let last=Date.now();
+function loop(){if(!carRun)return;let now=Date.now();if(now-last>650){blocks.push({x:65+Math.floor(Math.random()*4)*45,y:-40});last=now;carScore++;document.getElementById('carScore').textContent=carScore}
+blocks.forEach(b=>b.y+=5);blocks=blocks.filter(b=>b.y<390);if(blocks.some(b=>b.x<carX+40&&b.x+38>carX&&b.y<360&&b.y+38>330)){carRun=false;alert("Game Over! Score: "+carScore)}drawCar();requestAnimationFrame(loop)}loop()}
+document.addEventListener('keydown',e=>{if(e.key==="ArrowLeft")moveCar(-1);if(e.key==="ArrowRight")moveCar(1)});drawCar();
+
+// AIM
+const ac=document.getElementById('aim'),ax=ac.getContext('2d');let target=null,hits=0,aimRun=false,end=0;
+function newTarget(){target={x:20+Math.random()*250,y:20+Math.random()*250,r:18};ax.clearRect(0,0,300,300);ax.fillStyle="#ff4d6d";ax.beginPath();ax.arc(target.x,target.y,target.r,0,Math.PI*2);ax.fill()}
+ac.onclick=e=>{if(!aimRun)return;let r=ac.getBoundingClientRect(),x=(e.clientX-r.left)*300/r.width,y=(e.clientY-r.top)*300/r.height;if((x-target.x)**2+(y-target.y)**2<target.r**2){hits++;document.getElementById('hits').textContent=hits;newTarget()}};
+function startAim(){hits=0;aimRun=true;end=Date.now()+15000;document.getElementById('hits').textContent=0;newTarget();let t=setInterval(()=>{let s=Math.max(0,Math.ceil((end-Date.now())/1000));document.getElementById('time').textContent=s;if(s<=0){clearInterval(t);aimRun=false;ax.clearRect(0,0,300,300);alert("Time up! Hits: "+hits)}},200)}
+
+// SNAKE
+const sc=document.getElementById('snake'),sx=sc.getContext('2d');let snake=[],food={},dir={x:1,y:0},snakeRun=false,sScore=0;
+function setDir(x,y){if(dir.x===-x&&dir.y===-y)return;dir={x,y}}
+function startSnake(){snake=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];dir={x:1,y:0};sScore=0;document.getElementById('snakeScore').textContent=0;food={x:Math.floor(Math.random()*20),y:Math.floor(Math.random()*20)};snakeRun=true;snakeLoop()}
+function snakeLoop(){if(!snakeRun)return;let h={x:snake[0].x+dir.x,y:snake[0].y+dir.y};if(h.x<0||h.y<0||h.x>=20||h.y>=20||snake.some(p=>p.x===h.x&&p.y===h.y)){snakeRun=false;alert("Game Over! Score: "+sScore);return}snake.unshift(h);if(h.x===food.x&&h.y===food.y){sScore++;document.getElementById('snakeScore').textContent=sScore;food={x:Math.floor(Math.random()*20),y:Math.floor(Math.random()*20)}}else snake.pop();sx.clearRect(0,0,300,300);sx.fillStyle="#ff4d6d";sx.fillRect(food.x*15,food.y*15,14,14);sx.fillStyle="#7c5cff";snake.forEach(p=>sx.fillRect(p.x*15,p.y*15,14,14));setTimeout(snakeLoop,100)}
+</script>
+</body></html>
